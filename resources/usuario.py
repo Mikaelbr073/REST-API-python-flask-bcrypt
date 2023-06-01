@@ -3,6 +3,7 @@ from models.usuario import UserModel
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt
 #from werkzeug.security import safe_str_cmp
 from blacklist import BLACKLIST
+import bcrypt
 
 atributos = reqparse.RequestParser()
 atributos.add_argument('login', type=str, required=True, help="The field 'login' cannot be left blank")
@@ -31,7 +32,11 @@ class UserRegister(Resource):
         if UserModel.find_by_login(dados['login']):
             return{"messege": "The login {} already exists".format(dados['login'])}
 
-        user = UserModel(**dados )
+        password = dados['senha']
+        bytes = password.encode('utf-8')
+        salt = bcrypt.gensalt()
+        hash = bcrypt.hashpw(bytes, salt)
+        user = UserModel(dados['login'], hash)
         user.save_user()
         return {'menssage': 'User created successfully!'}, 201
 
